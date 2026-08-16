@@ -1,9 +1,10 @@
-// Wed Aug 12 9:11 PM
+// Sun Aug 16 6:00 PM
 // Flappy Folk v 1.0
 // by Moises Guillen
 #include <iostream>
 #include <random>
 #include <string>
+#include <vector>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
@@ -97,7 +98,21 @@ int main(int argc, char *argv[]) {
 
     // Load textures
     SDL_Texture* bgTex = IMG_LoadTexture(renderer, "bg.png");
-    SDL_Texture* birdTex = IMG_LoadTexture(renderer, "bird.png");
+
+    // SDL_Texture* birdTex = IMG_LoadTexture(renderer, "bird.png");
+
+    std::vector<SDL_Texture*> catSkins={
+        IMG_LoadTexture(renderer, "bird.png"),
+        IMG_LoadTexture(renderer, "bird2.png"),
+        IMG_LoadTexture(renderer, "bird3.png"),
+        IMG_LoadTexture(renderer, "bird4.png"),
+        IMG_LoadTexture(renderer, "bird5.png"),
+    };
+    int currentCat{};
+
+
+
+
     SDL_Texture* pipeTex = IMG_LoadTexture(renderer, "pipe.png");
     SDL_Texture* pipeDownText = IMG_LoadTexture(renderer, "pipedown.png");
 
@@ -155,6 +170,8 @@ int main(int argc, char *argv[]) {
                         // RESET score
                         score=0;
                         scoredThisPipe=false;
+                        // Cycle the catSkin on RESET
+                        currentCat = (currentCat+1) % catSkins.size();
                     }
                 }
             }
@@ -207,13 +224,15 @@ int main(int argc, char *argv[]) {
         SDL_RenderTexture(renderer, pipeTex, nullptr, &botPipe);
 
         // 4. Draw Bird
+        // [8/16] : Replaced birdTex with catSkins[currentCat] to allow multiple cat skins
+
         if (state == GameState::GAMEOVER) {
             // Tints the PNG red when you die instead of drawing a block over it
-            SDL_SetTextureColorMod(birdTex, 255, 100, 100);
+            SDL_SetTextureColorMod(catSkins[currentCat], 255, 100, 100);
         } else {
-            SDL_SetTextureColorMod(birdTex, 255, 255, 255); // Normal
+            SDL_SetTextureColorMod(catSkins[currentCat], 255, 255, 255); // Normal
         }
-        SDL_RenderTexture(renderer, birdTex, nullptr, &bird);
+        SDL_RenderTexture(renderer,catSkins[currentCat], nullptr, &bird);
 
         // CHECK PIPE COLLISION
         if (state==GameState::PLAYING) {
@@ -256,7 +275,7 @@ int main(int argc, char *argv[]) {
 
     if (font) { TTF_CloseFont(font); }
     TTF_Quit();
-    SDL_DestroyTexture(birdTex);
+    SDL_DestroyTexture(catSkins[currentCat]);
     SDL_DestroyTexture(pipeTex);
     SDL_DestroyTexture(bgTex);
     // IMG_Quit();
@@ -265,7 +284,7 @@ int main(int argc, char *argv[]) {
     MIX_DestroyTrack(flapTrack);
     MIX_DestroyTrack(crashTrack);
     MIX_DestroyTrack(scoreTrack);
-    // This project taught me that it requires a lot of programming experience
+    // There are levels to ts
 
     MIX_DestroyAudio(flapSfx);
     MIX_DestroyAudio(crashSfx);
