@@ -1,4 +1,4 @@
-// Sun Aug 16 6:00 PM
+// Sun Aug 18 1:50 AM
 // Flappy Folk v 1.0
 // by Moises Guillen
 #include <iostream>
@@ -14,14 +14,8 @@
 enum class GameState{ MENU, PLAYING, GAMEOVER };
 
 int main(int argc, char *argv[]) {
-
-    // AUDIO
+    // VIDEO + AUDIO CHECK
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
-        std::cout << "SDL Init Failed: " << SDL_GetError() << '\n';
-        return 1;
-    }
-    
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
         std::cout << "SDL Init Failed: " << SDL_GetError() << '\n';
         return 1;
     }
@@ -31,11 +25,6 @@ int main(int argc, char *argv[]) {
         std::cout << "TTF Init Failed: " << SDL_GetError() << '\n';
         return 1;
     }
-
-    // Init Image Lib
-    //if (!IMG_Init(IMG_INIT_PNG)) {
-    //    std::cout << "IMG Init Failed: " << SDL_GetError() << '\n';
-    //}
 
     // AUDIO
     if (!MIX_Init()) {
@@ -49,7 +38,7 @@ int main(int argc, char *argv[]) {
 
     // ** 1. Changed to PORTRAIT Res (Mobile Aspect Ratio)
     SDL_Window* window = SDL_CreateWindow(
-        "Flappy Bird",360,640,0);
+        "Flappy Folk",360,640,0);
 
     if (!window) {
         std::cout << "Window failed: " << SDL_GetError() << '\n';
@@ -107,14 +96,31 @@ int main(int argc, char *argv[]) {
         IMG_LoadTexture(renderer, "bird3.png"),
         IMG_LoadTexture(renderer, "bird4.png"),
         IMG_LoadTexture(renderer, "bird5.png"),
+        IMG_LoadTexture(renderer,"bird6.png"),
+        IMG_LoadTexture(renderer,"bird7.png"),
+        IMG_LoadTexture(renderer,"bird8.png"),
     };
+
+    // Null Check: make sure all skins load
+    for (size_t i{}; i<catSkins.size(); ++i) {
+        if (!catSkins[i]) {
+            std::cout << "Failed to load skin " << i << ": " << SDL_GetError() << '\n';
+        }
+    }
+
+    // New distribution for ints
+    // self-adjusts to however many skins are in the vector
+    std::uniform_int_distribution<int> skinDist(0, static_cast<int>(catSkins.size()) - 1);
+
     int currentCat{};
-
-
-
 
     SDL_Texture* pipeTex = IMG_LoadTexture(renderer, "pipe.png");
     SDL_Texture* pipeDownText = IMG_LoadTexture(renderer, "pipedown.png");
+
+    // Null Check: make sure all textures load
+    if (!bgTex){ std::cout << "Failed to load bg.png " << SDL_GetError() << ": " << '\n'; }
+    if (!pipeTex){ std::cout << "Failed to load pipe.png " << SDL_GetError() << ": " << '\n'; }
+    if (!pipeDownText){ std::cout << "Failed to load pipedown.png " << SDL_GetError() << ": " << '\n'; }
 
     // LOAD wav files
     MIX_Audio* flapSfx = MIX_LoadAudio(mixer, "sfx_wing.wav", true);
@@ -170,8 +176,11 @@ int main(int argc, char *argv[]) {
                         // RESET score
                         score=0;
                         scoredThisPipe=false;
+
                         // Cycle the catSkin on RESET
-                        currentCat = (currentCat+1) % catSkins.size();
+                        // [OLD]: currentCat = (currentCat+1) % catSkins.size();
+                        currentCat = skinDist(gen);
+
                     }
                 }
             }
@@ -275,7 +284,13 @@ int main(int argc, char *argv[]) {
 
     if (font) { TTF_CloseFont(font); }
     TTF_Quit();
-    SDL_DestroyTexture(catSkins[currentCat]);
+
+    // [8/18]: Memory leak on cleanup
+    // SDL_DestroyTexture(catSkins[currentCat]); BUG: only 1/8 variants eliminated
+    for (auto* variants:catSkins) {
+        SDL_DestroyTexture(variants);
+    }
+
     SDL_DestroyTexture(pipeTex);
     SDL_DestroyTexture(bgTex);
     // IMG_Quit();
@@ -295,6 +310,6 @@ int main(int argc, char *argv[]) {
     SDL_Quit();
     SDL_DestroyTexture(pipeDownText);
 
-    return 0;
+    return {};
 }
 
