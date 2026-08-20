@@ -1,4 +1,4 @@
-// Sun Aug 18 1:50 AM
+// Sun Aug 20 7:25 AM
 // Flappy Folk v 1.0
 // by Moises Guillen
 #include <iostream>
@@ -58,6 +58,11 @@ int main(int argc, char *argv[]) {
 
     bool running{true};
     GameState state = GameState::MENU;
+
+    // [8/20/26] - SCREEN SHAKE
+    int shakeTimer{};
+    float shakeStrength{8.0f};
+
 
     // BIRD Variables
     float birdY{320.0f};
@@ -212,7 +217,21 @@ int main(int argc, char *argv[]) {
             if (birdY > 640.0f-50.0f || birdY < 0.0f) {
                 MIX_PlayTrack(crashTrack, 0);
                 state = GameState::GAMEOVER;
+                // [8/20/26] - Trigger Shake when cat dies
+                shakeTimer=20;
             }
+        }
+
+        // [8/20/26] - Generate a camera offset each frame
+        float shakeX{};
+        float shakeY{};
+
+        if (shakeTimer>0) {
+            shakeX = ( rand() % static_cast<int>(shakeStrength*2) ) - shakeStrength;
+
+            shakeY = ( rand() % static_cast<int>(shakeStrength*2) ) - shakeStrength;
+
+            --shakeTimer;
         }
 
         // DRAWING
@@ -220,12 +239,15 @@ int main(int argc, char *argv[]) {
         SDL_RenderClear(renderer);
 
         // 1. Bring back the Rects (Positions & Hitboxes)
-        SDL_FRect topPipe{pipeX, 0, pipeWidth, topPipeHeight};
+        SDL_FRect topPipe{ pipeX+shakeX , shakeY, pipeWidth, topPipeHeight};
+
         SDL_FRect botPipe{pipeX, topPipeHeight + gapSize, pipeWidth, 640.0f - (topPipeHeight + gapSize)};
-        SDL_FRect bird{100.0f, birdY, 60.0f, 50.0f};
+        SDL_FRect bird{100.0f+shakeX, birdY+shakeY, 60.0f,50.0f};
 
         // 2. Draw Background
-        SDL_FRect bgRect{0, 0, 360, 640};
+        // [8/20/26] - Offset draw rectangles
+        SDL_FRect bgRect{shakeX,shakeY,360,640};
+
         SDL_RenderTexture(renderer, bgTex, nullptr, &bgRect);
 
         // 3. Draw Pipes (Using pipedown.png for the top!)
@@ -251,6 +273,9 @@ int main(int argc, char *argv[]) {
                 MIX_PlayTrack(crashTrack,0);
 
                 state=GameState::GAMEOVER;
+
+                // [8/20/26] - Trigger shake
+                shakeTimer=20;
                 }
         }
 
