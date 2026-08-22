@@ -1,4 +1,4 @@
-// Sun Aug 20 7:25 AM
+// Sun Aug 21 10:45 PM
 // Flappy Folk v 1.0
 // by Moises Guillen
 #include <iostream>
@@ -104,6 +104,12 @@ int main(int argc, char *argv[]) {
         IMG_LoadTexture(renderer,"bird6.png"),
         IMG_LoadTexture(renderer,"bird7.png"),
         IMG_LoadTexture(renderer,"bird8.png"),
+        // [8/21/26] - 5 NEW SKINS
+        IMG_LoadTexture(renderer,"bird9.png"),
+        IMG_LoadTexture(renderer,"bird10.png"),
+        IMG_LoadTexture(renderer,"bird11.png"),
+        IMG_LoadTexture(renderer,"bird12.png"),
+        IMG_LoadTexture(renderer,"bird13.png"),
     };
 
     // Null Check: make sure all skins load
@@ -126,6 +132,18 @@ int main(int argc, char *argv[]) {
     if (!bgTex){ std::cout << "Failed to load bg.png " << SDL_GetError() << ": " << '\n'; }
     if (!pipeTex){ std::cout << "Failed to load pipe.png " << SDL_GetError() << ": " << '\n'; }
     if (!pipeDownText){ std::cout << "Failed to load pipedown.png " << SDL_GetError() << ": " << '\n'; }
+
+    // [8/21/26] - Folk Valley Noises "folkvalleybgSFX.mp3"
+    MIX_Audio* natureSfx = MIX_LoadAudio(mixer,"folkvalleybgSFX.mp3",false);
+    if (!natureSfx){ std::cout << "Failed to load folkvalleybgSFX.mp3: " << SDL_GetError() << '\n'; }
+    MIX_Track* natureTrack = MIX_CreateTrack(mixer);
+    MIX_SetTrackAudio(natureTrack, natureSfx);
+
+    // [8/21/26] - Start bg ambience looping infinitely
+    SDL_PropertiesID natureProps = SDL_CreateProperties();
+    SDL_SetNumberProperty(natureProps, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
+    MIX_PlayTrack(natureTrack,natureProps);
+    SDL_DestroyProperties(natureProps);
 
     // LOAD wav files
     MIX_Audio* flapSfx = MIX_LoadAudio(mixer, "sfx_wing.wav", true);
@@ -324,11 +342,16 @@ int main(int argc, char *argv[]) {
     MIX_DestroyTrack(flapTrack);
     MIX_DestroyTrack(crashTrack);
     MIX_DestroyTrack(scoreTrack);
+    // 8/20/26
+    MIX_DestroyTrack(natureTrack);
+
     // There are levels to ts
 
     MIX_DestroyAudio(flapSfx);
     MIX_DestroyAudio(crashSfx);
     MIX_DestroyAudio(scoreSfx);
+    // 8/20/26
+    MIX_DestroyAudio(natureSfx);
 
     MIX_DestroyMixer(mixer);
     MIX_Quit();
