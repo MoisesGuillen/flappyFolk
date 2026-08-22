@@ -1,4 +1,4 @@
-// Sun Aug 21 10:45 PM
+// Fri Aug 21 10:45 PM
 // Flappy Folk v 1.0
 // by Moises Guillen
 #include <iostream>
