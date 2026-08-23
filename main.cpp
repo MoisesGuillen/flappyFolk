@@ -1,4 +1,4 @@
-// Fri Aug 21 10:45 PM
+// Sun Aug 23 8:00 AM
 // Flappy Folk v 1.0
 // by Moises Guillen
 #include <iostream>
@@ -77,6 +77,11 @@ int main(int argc, char *argv[]) {
     float pipeWidth{60.0f};
     float gapSize{160.0f};
     float topPipeHeight{200.0f};
+
+    // [8/23/26] - COLORED PIPES
+    Uint8 pipeR{255};
+    Uint8 pipeG{255};
+    Uint8 pipeB{255};
 
     // SCORE Variables
     int score{};
@@ -229,6 +234,18 @@ int main(int argc, char *argv[]) {
                 topPipeHeight=pipeDist(gen);
                 // Ready for the next pipe
                 scoredThisPipe=false;
+
+                // [8/23/26] - RGB + GOLDEN PIPE CHANCE
+                pipeR = rand() % 256;
+                pipeG = rand() % 256;
+                pipeB = rand() % 256;
+
+                if (rand()%10==0) {
+                    pipeR=255;
+                    pipeG=215;
+                    pipeB=0;
+                }
+
             }
 
             // Floor/Ceil Collision
@@ -269,6 +286,11 @@ int main(int argc, char *argv[]) {
         SDL_RenderTexture(renderer, bgTex, nullptr, &bgRect);
 
         // 3. Draw Pipes (Using pipedown.png for the top!)
+
+        // [8/23/26] - RGB Pipes
+        SDL_SetTextureColorMod(pipeTex, pipeR, pipeG, pipeB);
+        SDL_SetTextureColorMod(pipeDownText, pipeR, pipeG, pipeB);
+
         SDL_RenderTexture(renderer, pipeDownText, nullptr, &topPipe);
         SDL_RenderTexture(renderer, pipeTex, nullptr, &botPipe);
 
