@@ -1,4 +1,4 @@
-// Sun Aug 23 8:00 AM
+// Mon Aug 24 12:30 AM
 // Flappy Folk v 1.0
 // by Moises Guillen
 #include <iostream>
@@ -11,7 +11,50 @@
 #include <SDL3/SDL.h>
 
 // Game States so the window doesn't INSTANTLY close when u DIE
-enum class GameState{ MENU, PLAYING, GAMEOVER };
+enum class GameState {
+    MENU,
+    PLAYING,
+    GAMEOVER
+};
+
+// [8/24/26] - Refactoring w/ Structs
+struct Bird {
+    float y{320.0f};
+    float velocity{0.0f};
+    float gravity{0.5f};
+    float jumpPow{-8.5f};
+
+};
+
+struct Pipe {
+    float x{400};
+    float speed{4.0f};
+    float width{60.0f};
+    float size{160.0f};
+    float topHeight{200.0f};
+
+    Uint8 r{255};
+    Uint8 g{255};
+    Uint8 b{255};
+
+    bool scoredThisPipe{false};
+
+};
+
+struct CamShake {
+    int timer{};
+    float strength{8.0f};
+};
+
+struct Game {
+    Bird bird{};
+    Pipe pipe{};
+    CamShake shake{};
+    int score{};
+    GameState state{GameState::MENU};
+
+};
+
 
 int main(int argc, char *argv[]) {
     // VIDEO + AUDIO CHECK
@@ -57,35 +100,8 @@ int main(int argc, char *argv[]) {
     }
 
     bool running{true};
-    GameState state = GameState::MENU;
 
-    // [8/20/26] - SCREEN SHAKE
-    int shakeTimer{};
-    float shakeStrength{8.0f};
-
-
-    // BIRD Variables
-    float birdY{320.0f};
-    float velocity{0.0f};
-    float gravity{0.5f};
-    float jumpPow{-8.5f};
-
-    // PIPE Variables
-    // pipeX starts OFFSCREEN
-    float pipeX{400};
-    float pipeSpeed{4.0f};
-    float pipeWidth{60.0f};
-    float gapSize{160.0f};
-    float topPipeHeight{200.0f};
-
-    // [8/23/26] - COLORED PIPES
-    Uint8 pipeR{255};
-    Uint8 pipeG{255};
-    Uint8 pipeB{255};
-
-    // SCORE Variables
-    int score{};
-    bool scoredThisPipe{false};
+    Game game{};
 
     // Random Num Gen for Pipe Heights
     std::random_device rd;
@@ -93,7 +109,7 @@ int main(int argc, char *argv[]) {
     // Give buffer of 50 pixels minimum
     // for the Top and Bottom pipes
     std::uniform_real_distribution<float> pipeDist(
-        50.0f, 640.0f - gapSize - 50.f);
+        50.0f, 640.0f - game.pipe.size - 50.f);
 
     // Load textures
     SDL_Texture* bgTex = IMG_LoadTexture(renderer, "bg.png");
@@ -184,26 +200,26 @@ int main(int argc, char *argv[]) {
 
             if (event.type==SDL_EVENT_KEY_DOWN) {
                 if (event.key.key==SDLK_SPACE) {
-                    if (state==GameState::MENU) {
-                        state = GameState::PLAYING;
-                        velocity = jumpPow;
+                    if (game.state==GameState::MENU) {
+                        game.state = GameState::PLAYING;
+                        game.bird.velocity = game.bird.jumpPow;
                         // SOUND EFFECT
                         MIX_PlayTrack(flapTrack,0);
                     }
-                    else if (state==GameState::PLAYING) {
-                        velocity=jumpPow;
+                    else if (game.state==GameState::PLAYING) {
+                        game.bird.velocity=game.bird.jumpPow;
                         MIX_PlayTrack(flapTrack,0);
                     }
-                    else if (state==GameState::GAMEOVER) {
+                    else if (game.state==GameState::GAMEOVER) {
                         // RESET EVERYTHING
-                        state=GameState::MENU;
-                        birdY = 320.0f;
-                        velocity=0.0f;
-                        pipeX=400.0f;
-                        topPipeHeight=pipeDist(gen);
+                        game.state=GameState::MENU;
+                        game.bird.y = 320.0f;
+                        game.bird.velocity=0.0f;
+                        game.pipe.x=400.0f;
+                        game.pipe.topHeight=pipeDist(gen);
                         // RESET score
-                        score=0;
-                        scoredThisPipe=false;
+                        game.score=0;
+                        game.pipe.scoredThisPipe=false;
 
                         // Cycle the catSkin on RESET
                         // [OLD]: currentCat = (currentCat+1) % catSkins.size();
@@ -215,45 +231,45 @@ int main(int argc, char *argv[]) {
         }
 
         // UPDATE LOGIC
-        if (state==GameState::PLAYING) {
-            velocity=velocity+gravity;
-            birdY=birdY+velocity;
-            pipeX=pipeX-pipeSpeed;
+        if (game.state==GameState::PLAYING) {
+            game.bird.velocity=game.bird.velocity+game.bird.gravity;
+            game.bird.y=game.bird.y+game.bird.velocity;
+            game.pipe.x=game.pipe.x-game.pipe.speed;
 
             // Score Check: If bird passes on the right edge of the pipe
-            if (pipeX+pipeWidth < 100.0f && !scoredThisPipe) {
-                score++;
-                scoredThisPipe=true;
+            if (game.pipe.x+game.pipe.width < 100.0f && !game.pipe.scoredThisPipe) {
+                game.score++;
+                game.pipe.scoredThisPipe=true;
                 // SOUND EFFECT
                 MIX_PlayTrack(scoreTrack,0);
             }
 
             // Reset pipe when it goes off-screen & randomize Height
-            if (pipeX < -pipeWidth) {
-                pipeX=360.0f;
-                topPipeHeight=pipeDist(gen);
+            if (game.pipe.x < -game.pipe.width) {
+                game.pipe.x=360.0f;
+                game.pipe.topHeight=pipeDist(gen);
                 // Ready for the next pipe
-                scoredThisPipe=false;
+                game.pipe.scoredThisPipe=false;
 
                 // [8/23/26] - RGB + GOLDEN PIPE CHANCE
-                pipeR = rand() % 256;
-                pipeG = rand() % 256;
-                pipeB = rand() % 256;
+                game.pipe.r = rand() % 256;
+                game.pipe.g = rand() % 256;
+                game.pipe.b = rand() % 256;
 
                 if (rand()%10==0) {
-                    pipeR=255;
-                    pipeG=215;
-                    pipeB=0;
+                    game.pipe.r=255;
+                    game.pipe.g=215;
+                    game.pipe.b=0;
                 }
 
             }
 
             // Floor/Ceil Collision
-            if (birdY > 640.0f-50.0f || birdY < 0.0f) {
+            if (game.bird.y > 640.0f-50.0f || game.bird.y < 0.0f) {
                 MIX_PlayTrack(crashTrack, 0);
-                state = GameState::GAMEOVER;
+                game.state = GameState::GAMEOVER;
                 // [8/20/26] - Trigger Shake when cat dies
-                shakeTimer=20;
+                game.shake.timer=20;
             }
         }
 
@@ -261,12 +277,12 @@ int main(int argc, char *argv[]) {
         float shakeX{};
         float shakeY{};
 
-        if (shakeTimer>0) {
-            shakeX = ( rand() % static_cast<int>(shakeStrength*2) ) - shakeStrength;
+        if (game.shake.timer>0) {
+            shakeX = ( rand() % static_cast<int>(game.shake.strength*2) ) - game.shake.strength;
 
-            shakeY = ( rand() % static_cast<int>(shakeStrength*2) ) - shakeStrength;
+            shakeY = ( rand() % static_cast<int>(game.shake.strength*2) ) - game.shake.strength;
 
-            --shakeTimer;
+            --game.shake.timer;
         }
 
         // DRAWING
@@ -274,10 +290,10 @@ int main(int argc, char *argv[]) {
         SDL_RenderClear(renderer);
 
         // 1. Bring back the Rects (Positions & Hitboxes)
-        SDL_FRect topPipe{ pipeX+shakeX , shakeY, pipeWidth, topPipeHeight};
+        SDL_FRect topPipe{ game.pipe.x+shakeX , shakeY, game.pipe.width, game.pipe.topHeight};
 
-        SDL_FRect botPipe{pipeX, topPipeHeight + gapSize, pipeWidth, 640.0f - (topPipeHeight + gapSize)};
-        SDL_FRect bird{100.0f+shakeX, birdY+shakeY, 60.0f,50.0f};
+        SDL_FRect botPipe{game.pipe.x, game.pipe.topHeight + game.pipe.size, game.pipe.width, 640.0f - (game.pipe.topHeight + game.pipe.size)};
+        SDL_FRect birdRect{100.0f+shakeX, game.bird.y + shakeY, 60.0f,50.0f};
 
         // 2. Draw Background
         // [8/20/26] - Offset draw rectangles
@@ -288,8 +304,8 @@ int main(int argc, char *argv[]) {
         // 3. Draw Pipes (Using pipedown.png for the top!)
 
         // [8/23/26] - RGB Pipes
-        SDL_SetTextureColorMod(pipeTex, pipeR, pipeG, pipeB);
-        SDL_SetTextureColorMod(pipeDownText, pipeR, pipeG, pipeB);
+        SDL_SetTextureColorMod(pipeTex, game.pipe.r, game.pipe.g, game.pipe.b);
+        SDL_SetTextureColorMod(pipeDownText, game.pipe.r, game.pipe.g, game.pipe.b);
 
         SDL_RenderTexture(renderer, pipeDownText, nullptr, &topPipe);
         SDL_RenderTexture(renderer, pipeTex, nullptr, &botPipe);
@@ -297,32 +313,32 @@ int main(int argc, char *argv[]) {
         // 4. Draw Bird
         // [8/16] : Replaced birdTex with catSkins[currentCat] to allow multiple cat skins
 
-        if (state == GameState::GAMEOVER) {
+        if (game.state == GameState::GAMEOVER) {
             // Tints the PNG red when you die instead of drawing a block over it
             SDL_SetTextureColorMod(catSkins[currentCat], 255, 100, 100);
         } else {
             SDL_SetTextureColorMod(catSkins[currentCat], 255, 255, 255); // Normal
         }
-        SDL_RenderTexture(renderer,catSkins[currentCat], nullptr, &bird);
+        SDL_RenderTexture(renderer,catSkins[currentCat], nullptr, &birdRect);
 
         // CHECK PIPE COLLISION
-        if (state==GameState::PLAYING) {
-            if (SDL_HasRectIntersectionFloat(&bird,&topPipe) ||
-                SDL_HasRectIntersectionFloat(&bird,&botPipe)) {
+        if (game.state==GameState::PLAYING) {
+            if (SDL_HasRectIntersectionFloat(&birdRect,&topPipe) ||
+                SDL_HasRectIntersectionFloat(&birdRect,&botPipe)) {
 
                 MIX_PlayTrack(crashTrack,0);
 
-                state=GameState::GAMEOVER;
+                game.state=GameState::GAMEOVER;
 
                 // [8/20/26] - Trigger shake
-                shakeTimer=20;
+                game.shake.timer=20;
                 }
         }
 
 
         // Draw Score
-        if ( (state==GameState::PLAYING || state==GameState::GAMEOVER) && font!=nullptr) {
-            std::string scoreText = std::to_string(score);
+        if ( (game.state==GameState::PLAYING || game.state==GameState::GAMEOVER) && font!=nullptr) {
+            std::string scoreText = std::to_string(game.score);
             SDL_Color textColor = {255,255,255,255};
 
             SDL_Surface* textSurface = TTF_RenderText_Solid(font,scoreText.c_str(),
@@ -358,21 +374,17 @@ int main(int argc, char *argv[]) {
 
     SDL_DestroyTexture(pipeTex);
     SDL_DestroyTexture(bgTex);
-    // IMG_Quit();
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     MIX_DestroyTrack(flapTrack);
     MIX_DestroyTrack(crashTrack);
     MIX_DestroyTrack(scoreTrack);
-    // 8/20/26
     MIX_DestroyTrack(natureTrack);
 
     // There are levels to ts
-
     MIX_DestroyAudio(flapSfx);
     MIX_DestroyAudio(crashSfx);
     MIX_DestroyAudio(scoreSfx);
-    // 8/20/26
     MIX_DestroyAudio(natureSfx);
 
     MIX_DestroyMixer(mixer);
