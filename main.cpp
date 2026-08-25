@@ -1,4 +1,4 @@
-// Mon Aug 24 1:11 AM
+// Tue Aug 25 2:47 AM
 // Flappy Folk v 1.0
 // by Moises Guillen
 #include <iostream>
@@ -23,6 +23,7 @@ struct Bird {
     float velocity{0.0f};
     float gravity{0.5f};
     float jumpPow{-8.5f};
+    std::vector<float> trail{}; // [8/25/26] - pseudo motion blur, last N y-positions
 
 };
 
@@ -215,6 +216,9 @@ int main(int argc, char *argv[]) {
                         game.state=GameState::MENU;
                         game.bird.y = 320.0f;
                         game.bird.velocity=0.0f;
+
+                        game.bird.trail.clear();
+
                         game.pipe.x=400.0f;
                         game.pipe.topHeight=pipeDist(gen);
                         // RESET score
@@ -234,6 +238,13 @@ int main(int argc, char *argv[]) {
         if (game.state==GameState::PLAYING) {
             game.bird.velocity=game.bird.velocity+game.bird.gravity;
             game.bird.y=game.bird.y+game.bird.velocity;
+
+            // [8/25/26] - Push into it every PLAYING update tick
+            game.bird.trail.push_back(game.bird.y);
+            if (game.bird.trail.size() > 6) {
+                game.bird.trail.erase(game.bird.trail.begin());
+            }
+
             game.pipe.x=game.pipe.x-game.pipe.speed;
 
             // Score Check: If bird passes on the right edge of the pipe
@@ -293,22 +304,31 @@ int main(int argc, char *argv[]) {
         SDL_FRect topPipe{ game.pipe.x+shakeX , shakeY, game.pipe.width, game.pipe.topHeight};
 
         SDL_FRect botPipe{game.pipe.x, game.pipe.topHeight + game.pipe.size, game.pipe.width, 640.0f - (game.pipe.topHeight + game.pipe.size)};
+
         SDL_FRect birdRect{100.0f+shakeX, game.bird.y + shakeY, 60.0f,50.0f};
 
         // 2. Draw Background
         // [8/20/26] - Offset draw rectangles
         SDL_FRect bgRect{shakeX,shakeY,360,640};
-
         SDL_RenderTexture(renderer, bgTex, nullptr, &bgRect);
 
         // 3. Draw Pipes (Using pipedown.png for the top!)
-
         // [8/23/26] - RGB Pipes
         SDL_SetTextureColorMod(pipeTex, game.pipe.r, game.pipe.g, game.pipe.b);
         SDL_SetTextureColorMod(pipeDownText, game.pipe.r, game.pipe.g, game.pipe.b);
-
         SDL_RenderTexture(renderer, pipeDownText, nullptr, &topPipe);
         SDL_RenderTexture(renderer, pipeTex, nullptr, &botPipe);
+
+        // 4. Draw Ghosts
+        size_t trailCount = game.bird.trail.size();
+        for (size_t i{}; i<trailCount; ++i) {
+            // Uint8 alpha = static_cast<Uint8>( 15 + (i * 90 / std::max<size_t>(trailCount,1)));
+            Uint8 alpha = static_cast<Uint8>( 8 + (i * 35 / std::max<size_t>(trailCount,1)));  // was 15 + 90
+            SDL_FRect ghostRect{ 100.0f + shakeX, game.bird.trail[i] + shakeY, 60.0f, 50.0f};
+            SDL_SetTextureAlphaMod(catSkins[currentCat],alpha);
+            SDL_RenderTexture(renderer,catSkins[currentCat], nullptr, &ghostRect);
+        }
+        SDL_SetTextureAlphaMod(catSkins[currentCat],255); // reset before real bird
 
         // 4. Draw Bird
         // [8/16] : Replaced birdTex with catSkins[currentCat] to allow multiple cat skins
@@ -334,7 +354,6 @@ int main(int argc, char *argv[]) {
                 game.shake.timer=20;
                 }
         }
-
 
         // Draw Score
         if ( (game.state==GameState::PLAYING || game.state==GameState::GAMEOVER) && font!=nullptr) {
