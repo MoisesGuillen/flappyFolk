@@ -1,4 +1,4 @@
-// Tue Aug 25 2:47 AM
+// Wed Aug 26 2:47 AM
 // Flappy Folk v 1.0
 // by Moises Guillen
 #include <iostream>
@@ -9,6 +9,7 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <SDL3/SDL.h>
+#include <ctime>
 
 // Game States so the window doesn't INSTANTLY close when u DIE
 enum class GameState {
@@ -107,6 +108,9 @@ int main(int argc, char *argv[]) {
     // Random Num Gen for Pipe Heights
     std::random_device rd;
     std::mt19937 gen(rd());
+
+    std::srand(static_cast<unsigned>( time(nullptr)));
+
     // Give buffer of 50 pixels minimum
     // for the Top and Bottom pipes
     std::uniform_real_distribution<float> pipeDist(
