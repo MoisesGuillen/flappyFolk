@@ -1,4 +1,4 @@
-// Wed Aug 26 2:47 AM
+// Sun Aug 30 10:00 AM
 // Flappy Folk v 1.0
 // by Moises Guillen
 #include <iostream>
@@ -53,6 +53,7 @@ struct Game {
     Pipe pipe{};
     CamShake shake{};
     int score{};
+    int highScore{};
     GameState state{GameState::MENU};
 
 };
@@ -285,6 +286,10 @@ int main(int argc, char *argv[]) {
                 game.state = GameState::GAMEOVER;
                 // [8/20/26] - Trigger Shake when cat dies
                 game.shake.timer=20;
+                // [8/20/26] - High Score UPDATE
+                if (game.score > game.highScore) {
+                    game.highScore = game.score;
+                }
             }
         }
 
@@ -356,6 +361,12 @@ int main(int argc, char *argv[]) {
 
                 // [8/20/26] - Trigger shake
                 game.shake.timer=20;
+
+                // [8/30/26] - High Score
+                if (game.score > game.highScore) {
+                    game.highScore = game.score;
+                }
+
                 }
         }
 
@@ -374,6 +385,25 @@ int main(int argc, char *argv[]) {
 
                 SDL_DestroyTexture(textTexture);
                 SDL_DestroySurface(textSurface);
+            }
+        }
+
+        // Draw High Score (top right, only on GAMEOVER)
+        if (game.state == GameState::GAMEOVER || (game.state == GameState::MENU && font != nullptr)) {
+            std::string hiText = "BEST " + std::to_string(game.highScore);
+            SDL_Color hiColor = {255, 255, 255, 255};
+
+            // Render smaller by using a separate small font, OR scale down the rect (see note below)
+            SDL_Surface* hiSurface = TTF_RenderText_Solid(font, hiText.c_str(), hiText.length(), hiColor);
+            if (hiSurface) {
+                SDL_Texture* hiTexture = SDL_CreateTextureFromSurface(renderer, hiSurface);
+                float hiW = hiSurface->w * 0.3f;   // shrink to ~40% size
+                float hiH = hiSurface->h * 0.3f;
+                SDL_FRect hiRect = {360.0f - hiW - 10.0f, 10.0f, hiW, hiH};  // top-right, 10px padding
+                SDL_RenderTexture(renderer, hiTexture, nullptr, &hiRect);
+
+                SDL_DestroyTexture(hiTexture);
+                SDL_DestroySurface(hiSurface);
             }
         }
 
