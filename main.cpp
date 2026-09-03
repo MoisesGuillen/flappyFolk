@@ -1,4 +1,4 @@
-// Sun Aug 30 10:00 AM
+// Sun Sept 3 4:45 PM
 // Flappy Folk v 1.0
 // by Moises Guillen
 #include <iostream>
@@ -426,6 +426,7 @@ int main(int argc, char *argv[]) {
     }
 
     SDL_DestroyTexture(pipeTex);
+    SDL_DestroyTexture(pipeDownText);
     SDL_DestroyTexture(bgTex);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
@@ -443,7 +444,6 @@ int main(int argc, char *argv[]) {
     MIX_DestroyMixer(mixer);
     MIX_Quit();
     SDL_Quit();
-    SDL_DestroyTexture(pipeDownText);
 
     return {};
 }
