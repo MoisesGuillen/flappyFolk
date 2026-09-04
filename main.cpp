@@ -312,7 +312,8 @@ int main(int argc, char *argv[]) {
         // 1. Bring back the Rects (Positions & Hitboxes)
         SDL_FRect topPipe{ game.pipe.x+shakeX , shakeY, game.pipe.width, game.pipe.topHeight};
 
-        SDL_FRect botPipe{game.pipe.x, game.pipe.topHeight + game.pipe.size, game.pipe.width, 640.0f - (game.pipe.topHeight + game.pipe.size)};
+        //SDL_FRect botPipe{game.pipe.x, game.pipe.topHeight + game.pipe.size, game.pipe.width, 640.0f - (game.pipe.topHeight + game.pipe.size)};
+        SDL_FRect botPipe{game.pipe.x+shakeX, game.pipe.topHeight + game.pipe.size + shakeY, game.pipe.width, 640.0f - (game.pipe.topHeight + game.pipe.size)};
 
         SDL_FRect birdRect{100.0f+shakeX, game.bird.y + shakeY, 60.0f,50.0f};
 
