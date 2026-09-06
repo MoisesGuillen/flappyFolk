@@ -1,4 +1,4 @@
-// Sun Sept 3 4:45 PM
+// Sun Sept 6 4:20 AM
 // Flappy Folk v 1.0
 // by Moises Guillen
 #include <iostream>
@@ -258,6 +258,7 @@ int main(int argc, char *argv[]) {
                 game.pipe.scoredThisPipe=true;
                 // SOUND EFFECT
                 MIX_PlayTrack(scoreTrack,0);
+                game.pipe.speed += 0.03f;
             }
 
             // Reset pipe when it goes off-screen & randomize Height
