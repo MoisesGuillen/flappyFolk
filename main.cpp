@@ -1,4 +1,4 @@
-// Sun Sept 6 4:20 AM
+// Tue Sept 8 2:45 AM
 // Flappy Folk v 1.0
 // by Moises Guillen
 #include <iostream>
@@ -406,6 +406,23 @@ int main(int argc, char *argv[]) {
 
                 SDL_DestroyTexture(hiTexture);
                 SDL_DestroySurface(hiSurface);
+            }
+        }
+
+        // Draw Title/Name (MENU only)
+        if (game.state == GameState::MENU && font != nullptr) {
+            SDL_Color nameColor = {255, 255, 255, 255};
+
+            SDL_Surface* nameSurface = TTF_RenderText_Solid(font, "By: Moises Guillen", 19, nameColor);
+            if (nameSurface) {
+                SDL_Texture* nameTexture = SDL_CreateTextureFromSurface(renderer, nameSurface);
+                float nameW = nameSurface->w * 0.6f;
+                float nameH = nameSurface->h * 0.6f;
+                SDL_FRect nameRect = {180.0f - (nameW / 2.0f), 65.0f, nameW, nameH};
+                SDL_RenderTexture(renderer, nameTexture, nullptr, &nameRect);
+
+                SDL_DestroyTexture(nameTexture);
+                SDL_DestroySurface(nameSurface);
             }
         }
 
